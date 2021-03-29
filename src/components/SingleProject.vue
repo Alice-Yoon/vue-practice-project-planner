@@ -1,11 +1,11 @@
 <template>
-  <div class="project">
-    <div class="actions">
+  <div class="project" :class="project.complete ? 'complete' : 'incomplete'">
+    <div class='actions'>
       <h3 @click="toggleShowDetails">{{ project.title }}</h3>
       <div class="icons">
         <span class="material-icons">edit</span>
         <span @click="deleteProject" class="material-icons">delete</span>
-        <span class="material-icons">done</span>
+        <span @click="toggleComplete" class="material-icons tick">done</span>
       </div>
     </div>
     <div class="details" v-if="showDetails">
@@ -19,7 +19,8 @@ export default {
   props: ['project'],
   data() {
     return {
-      showDetails: false
+      showDetails: false,
+      uri: `http://localhost:3000/projects/${this.project.id}`,
     }
   },
   methods: {
@@ -27,9 +28,18 @@ export default {
       this.showDetails = !this.showDetails
     },
     deleteProject() {
-      fetch(`http://localhost:3000/projects/${this.project.id}`, { method: 'DELETE' })
+      fetch(this.uri, { method: 'DELETE' })
         .then(() => this.$emit('deleteProject', this.project.id))
         .catch(err => console.log(err))
+    },
+    toggleComplete() {
+      fetch(this.uri, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type' : 'application/json' },
+        body: JSON.stringify({ complete: !this.project.complete })
+      }).then(() => {
+        this.$emit('completeProject', this.project.id)
+      }).catch(err => console.log(err))
     }
   }
 }
@@ -42,7 +52,15 @@ export default {
   padding: 10px 20px;
   border-radius: 4px;
   box-shadow: 1px 2px 3px rgba(0,0,0,0.05);
+}
+.project.incomplete {
   border-left: 4px solid #e90074;
+}
+.project.complete {
+  border-left: 4px solid #00ce89;
+}
+.project.complete .tick {
+  color: #00ce89;
 }
 h3 {
   cursor: pointer;
